@@ -1,0 +1,171 @@
+{
+    "name": "my-code-assistant",
+    "displayName": "My Code Assistant",
+    "publisher": "your-publisher",
+    "description": "",
+    "version": "0.0.1",
+    "engines": {
+      "vscode": "^1.89.0"
+    },
+    
+    "categories": [
+      "Other"
+    ],
+    "activationEvents": [
+      "onCommand:extension.create",
+      "onCommand:extension.explain",
+      "onCommand:extension.fix",
+      "onCommand:extension.refactor",
+      "onCommand:myExtension.configure",
+      "onView:myCustomView"
+    ],
+    "main": "./out/extension.js",
+    "enabledApiProposals": [
+      "contribViewsWelcome"
+    ],
+    "contributes": {
+      "viewsContainers": {
+        "activitybar": [
+          {
+            "id": "myCustomViewContainer",
+            "title": "Experimental AI Code Assistant",
+            "icon": "/resources/xai.png"
+          }
+        ]
+      },
+      "views": {
+        "myCustomViewContainer": [
+          {
+            "type": "webview",
+            "id": "myCustomView",
+            "name": "Experimental AI Code Assistant",
+            "icon":"resources/xai.png"
+          }
+        ]
+      },
+      "viewsWelcome": [
+        {
+          "view": "myCustomView",
+          "contents": "![Welcome](https://code.visualstudio.com/assets/images/code-stable.png)\n\n# Welcome to My Code Assistant\n\nThis extension helps you write and understand code using AI.\n\n- **Initialize Repository**: Set up a new Git repository\n- **Publish to GitHub**: Publish your code to GitHub\n\n[Learn more](https://example.com)",
+          "when": "view == myCustomView && !config.myExtension.hideWelcome",
+          "group": "welcome@1"
+        }
+      ],
+      "commands": [
+        {
+          "command": "extension.processData2",
+          "title": "Handle watsonx questions"
+        },
+        {
+          "command": "extension.processData",
+          "title": "Process Data"
+        },
+        {
+          "command": "extension.create",
+          "title": "Create Code"
+        },
+        {
+          "command": "extension.explain",
+          "title": "Explain This"
+        },
+        {
+          "command": "extension.test",
+          "title": "Create Unit tests"
+        },
+        {
+          "command": "extension.convert",
+          "title": "Convert this code"
+        },
+        {
+          "command": "myExtension.configure",
+          "title": "Configure My Extension"
+        }
+      ],
+      "menus": {
+        "editor/context": [
+          {
+            "when": "editorTextFocus",
+            "command": "extension.create",
+            "group": "navigation"
+          },
+          {
+            "when": "editorTextFocus",
+            "command": "extension.explain",
+            "group": "navigation"
+          },
+          {
+            "when": "editorTextFocus",
+            "command": "extension.test",
+            "group": "navigation"
+          },
+          {
+            "when": "editorTextFocus",
+            "command": "extension.convert",
+            "group": "navigation"
+          }
+        ]
+      },
+      "configuration": {
+        "title": "Experimental AI Code Assistant Powered by Watsonx.AI",
+        "properties": {
+          "myExtension.apiKey": {
+            "type": "string",
+            "default": "",
+            "description": "API Key for accessing the service"
+          },
+          "myExtension.url": {
+            "type": "string",
+            "default": "",
+            "description": "The URL to the API service"
+          },
+          "myExtension.projectId": {
+            "type": "string",
+            "default": "",
+            "description": "Project ID"
+          },
+          "myExtension.modelType": {
+            "type": "string",
+            "default": "mistralai/mixtral-8x7b-instruct-v01",
+            "enum": [
+              "ibm/granite-13b-chat-v2",
+              "meta-llama/llama-3-8b-instruct",
+              "ibm/granite-8b-code-instruct",
+              "ibm/granite-20b-code-instruct",
+              "ibm-mistralai/merlinite-7b"
+            ],
+            "enumDescriptions": [
+              "Granite-13b-Chat-v2",
+              "Llama-3-8b-instruct",
+              "granite-8b-code-instruct",
+              "granite-20b-code-instruct",
+              "mixtral-8x7b-instruct-v01"
+            ],
+            "description": "Choose a Foundation model:"
+          }
+        }
+      }
+    },
+    "scripts": {
+      "vscode:prepublish": "npm run compile",
+      "compile": "tsc -p ./",
+      "watch": "tsc -watch -p ./",
+      "pretest": "npm run compile && npm run lint",
+      "lint": "eslint src --ext ts",
+      "test": "vscode-test"
+    },
+    "devDependencies": {
+      "@types/mocha": "^10.0.6",
+      "@types/node": "18.x",
+      "@types/vscode": "^1.89.0",
+      "@typescript-eslint/eslint-plugin": "^7.7.1",
+      "@typescript-eslint/parser": "^7.7.1",
+      "@vscode/test-cli": "^0.0.9",
+      "@vscode/test-electron": "^2.3.9",
+      "eslint": "^8.57.0",
+      "typescript": "^5.4.5"
+    },
+    "dependencies": {
+      "axios": "^1.6.8"
+    }
+  }
+  

@@ -1,0 +1,147 @@
+{
+  "name": "my code assistant",
+  "displayName": "my code assistant",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.explain",
+    "onCommand:extension.fix",
+    "onCommand:extension.refactor",
+    "onCommand:myExtension.configure",
+    "onView:myCustomView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "myCustomViewContainer",
+          "title": "Experimental AI Code assistant",
+          "icon": "resources/xai.png"
+        }
+      ]
+    },
+    "views": {
+      "myCustomViewContainer": [
+        {
+          "id": "myCustomView",
+          "name": "Experimental AI Code assistant"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.create",
+        "title": "Create Code"
+      },
+      {
+        "command": "extension.explain",
+        "title": "Explain This"
+      },
+      {
+        "command": "extension.fix",
+        "title": "Fix This"
+      },
+      {
+        "command": "extension.refactor",
+        "title": "Refactor"
+      },
+      {
+        "command": "myExtension.configure",
+        "title": "Configure My Extension"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when":"editorTextFocus",
+          "command": "extension.create",
+          "group": "navigation"
+        },
+        {
+          "when": "editorTextFocus",
+          "command": "extension.explain",
+          "group": "navigation"
+        },
+        {
+          "when": "editorTextFocus",
+          "command": "extension.fix",
+          "group": "navigation"
+        },
+        {
+          "when": "editorTextFocus",
+          "command": "extension.refactor",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "My Extension Settings",
+      "properties": {
+        "myExtension.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for accessing the service"
+        },
+        "myExtension.url": {
+          "type": "string",
+          "default": "",
+          "description": "The URL to the API service"
+        },
+        "myExtension.projectId": {
+          "type": "string",
+          "default": "",
+          "description": "Project ID"
+        },
+        "myExtension.modelType": {
+          "type": "string",
+          "default": "Granite",
+          "enum": [
+            "Granite",
+            "LLAMA2",
+            "LLAMA3",
+            "MIXTRAL",
+            "STARCODER"
+          ],
+          "enumDescriptions": [
+            "Description of option 1",
+            "Description of option 2",
+            "Description of option 3",
+            "Description of option 4",
+            "Description of option 5"
+          ],
+          "description": "Choose a Foundation model:"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.89.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",
+    "axios": "^0.21.1"
+  },
+  "dependencies": {
+    "axios": "^1.6.8"
+  }
+}

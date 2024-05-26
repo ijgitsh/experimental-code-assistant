@@ -1,0 +1,313 @@
+// The module 'vscode' contains the VS Code extensibility API
+// Import the module and reference it with the alias vscode in your code below
+import * as vscode from 'vscode';
+import axios from 'axios';
+
+
+async function authenticate(): Promise<string> {
+
+	const config = vscode.workspace.getConfiguration('myExtension');
+	let apiKey = config.get('apiKey') as string;
+	const url = 'https://iam.cloud.ibm.com/identity/token';
+    const data = `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${encodeURIComponent(apiKey)}`;
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+	try {
+        const response = await axios.post(url, data, { headers });
+        return response.data.access_token;  // Assuming the token is returned under access_token
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            // Handle the error response from the server
+            console.error('Authentication failed:', error.response.data);
+        } else {
+            console.error('Error sending request:');
+        }
+        throw error;  // Re-throw to handle it outside or inform the user accordingly
+    }
+/*
+	try {
+		const response = await axios.post(url, {
+			grant_type: 'urn:ibm:params:oauth:grant-type:apikey',
+			apikey: apiKey,
+			Headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			}
+		});
+		// Optionally, you can add additional validation of the API key here
+		interface AccessToken {
+			access_token: string;
+			refresh_token: string;
+			ims_user_id: number;
+			token_type: string;
+			expires_in: number;
+			expiration: number;
+			scope: string;
+		}
+		const parsedData: AccessToken = JSON.parse(JSON.stringify(response.data));
+		console.debug(parsedData.access_token);
+		return parsedData.access_token;
+	} catch (error) {
+		vscode.window.showErrorMessage('error authentication' + error + apiKey);
+		return "NA";
+	}
+
+*/
+
+
+
+
+}
+
+class MyCustomViewProvider implements vscode.WebviewViewProvider {
+	public static readonly viewType = 'myExtension.myCustomView';
+  
+	constructor(private readonly extensionUri: vscode.Uri) {}
+  
+	resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
+	  webviewView.webview.options = {
+		enableScripts: true,
+	  };
+  
+	  webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+  
+	  webviewView.webview.onDidReceiveMessage(data => {
+		switch (data.type) {
+		  case 'requestData':
+			webviewView.webview.postMessage({ message: 'Hello from the extension!', timestamp: new Date().toLocaleTimeString() });
+			break;
+		}
+	  });
+	}
+  
+	private getHtmlForWebview(webview: vscode.Webview): string {
+	  return `<!DOCTYPE html>
+	  <html lang="en">
+	  <head>
+		  <meta charset="UTF-8">
+		  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		  <title>Custom View</title>
+	  </head>
+	  <body>
+		  <h1 id="message">Loading...</h1>
+		  <p id="timestamp"></p>
+		  <script>
+			  const vscode = acquireVsCodeApi();
+  
+			  window.onload = function() {
+				  vscode.postMessage({ type: 'requestData' });
+			  };
+  
+			  window.addEventListener('message', event => {
+				  const data = event.data;
+				  document.getElementById('message').textContent = data.message;
+				  document.getElementById('timestamp').textContent = data.timestamp;
+			  });
+		  </script>
+	  </body>
+	  </html>`;
+	}
+  }
+// This method is called when your extension is activated
+// Your extension is activated the very first time the command is executed
+export function activate(context: vscode.ExtensionContext) {
+	const config = vscode.workspace.getConfiguration('myExtension');
+	const apiKey = config.get('apiKey');
+	const url = config.get('url');
+	const projectId = config.get('projectId');
+	const modelType = config.get('modelType');
+
+
+
+
+	// Use the console to output diagnostic information (console.log) and errors (console.error)
+	// This line of code will only be executed once when your extension is activated
+	console.log('Congratulations, your extension "helloworld" is now active!');
+
+	// The command has been defined in the package.json file
+	// Now provide the implementation of the command with registerCommand
+	// The commandId parameter must match the command field in package.json
+	let bearer_token: string;
+	let disposable = vscode.commands.registerCommand('extension.create', async () => {
+		try {
+			bearer_token = await authenticate();
+		} catch (error) {
+			vscode.window.showErrorMessage('error authentication' + error);
+		}
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const document = editor.document;
+			const selection = editor.selection;
+			const selectedText = document.getText(selection);
+			const postData = {
+				"input": "context: you are an expert code in various programming languages. Your job is to write concise and clean code in any programming language given. you will detect the programming language detected in the given text and create the code; you ensure the code contains the right libraries.\n Only print the required code and do not repeat the answer.\n\nexample :\n\nCode description\nScala code example that demonstrates reading a file and counting the occurrences of each word in the file. This is a practical example that can be useful for text processing or data analysis tasks.\n\ngenerated code \nimport scala.io.Source\n\nobject WordCount {\n  def main(args: Array[String]): Unit = {\n    if (args.length != 1) {\n      println(\"Usage: scala WordCount <file>\")\n      sys.exit(1)\n    }\n\n    val filename = args(0)\n    val source = Source.fromFile(filename)\n\n    try {\n      val lines = source.getLines().toList\n      val wordCounts = lines\n        .flatMap(_.split(\"\\\\W+\")) // Split lines into words\n        .filter(_.nonEmpty) // Filter out empty words\n        .map(_.toLowerCase) // Convert words to lowercase\n        .groupBy(identity) // Group by word\n        .mapValues(_.size) // Count occurrences\n\n      // Print the word counts\n      wordCounts.toSeq.sortBy(-_._2).foreach {\n        case (word, count) => println(s\"$word: $count\")\n      }\n    } finally {\n      source.close()\n    }\n  }\n}\n\ngenerate code for this code description\n" + selectedText,
+				"parameters": {
+					"decoding_method": "greedy",
+					"max_new_tokens": 1000,
+					"min_new_tokens": 0,
+					"stop_sequences": [],
+					"repetition_penalty": 1
+				},
+				"model_id": "mistralai/mixtral-8x7b-instruct-v01",
+				"project_id": "2bd2fef2-9902-41f4-b67a-b35ac6fca32d",
+				"moderations": {
+					"hap": {
+						"input": {
+							"enabled": true,
+							"threshold": 0.5,
+							"mask": {
+								"remove_entity_value": true
+							}
+						},
+						"output": {
+							"enabled": true,
+							"threshold": 0.5,
+							"mask": {
+								"remove_entity_value": true
+							}
+						}
+					}
+				}
+			};
+
+			try {
+				const response = await axios.post('https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29', postData, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Authorization': 'Bearer ' + bearer_token
+					}
+				});
+				interface JsonResponse {
+					model_id: string;
+					created_at: string;
+					results: Array<{
+						generated_text: string;
+						generated_token_count?: number;
+					}>;
+				}
+				const jsonResponse = response.data as JsonResponse;
+				const generatedText = jsonResponse.results[0].generated_text;
+				const position = editor.selection.active; // Current cursor position
+				const newPosition = position.translate(1, 0);
+				editor.edit((editBuilder) => {
+					editBuilder.insert(newPosition, "\n" + generatedText); // Text to insert
+				});
+			}
+
+			catch (error) {
+				vscode.window.showErrorMessage(`Error creating the code` + error + 'try again token is ' + bearer_token);
+				bearer_token = await authenticate();
+			}
+
+		}
+
+	});
+	let configure = vscode.commands.registerCommand('myExtension.configure', () => {
+		vscode.commands.executeCommand('workbench.action.openSettings', 'myExtension');
+	});
+	let explain = vscode.commands.registerCommand('extension.explain', async () => {
+
+		try {
+			bearer_token = await authenticate();
+		} catch (error) {
+			vscode.window.showErrorMessage('error authentication' + error);
+		}
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const document = editor.document;
+			const selection = editor.selection;
+
+			// Get the selected text
+			const selectedText = document.getText(selection);
+			const postData = {
+				"input": "Context : you are a code assistant; your job is to detect the programming language of the given code and then your job is explain what the code does.\n Only print the required code and do not repeat the answer. \n\nexample\n<input>\nfrom collections import Counter\n\ndef most_common_element(items):\n    \"\"\"Returns the most common element from the list along with its count.\"\"\"\n    if not items:\n        return None, 0  # Handle empty list case\n\n    item_counts = Counter(items)\n    most_common = item_counts.most_common(1)[0]  # Get the most common element and count\n    return most_common\n\n# Example usage:\nelements = ['\''apple'\'', '\''banana'\'', '\''apple'\'', '\''orange'\'', '\''banana'\'', '\''banana'\'']\nelement, count = most_common_element(elements)\nprint(f\"The most common element is '\''{element}'\'' with a count of {count}.\")\n</input>\n\nExplanation : \nImporting Counter:\n\nThe Counter class from the collections module is a specialized dictionary designed for counting hashable objects. It'\''s an extremely useful tool for this type of task because it automatically counts the occurrences of each element in the list.\nFunction Definition:\n\nmost_common_element(items): Defines a function that accepts a list items and returns the most common element in the list along with its count.\nHandling Empty Lists:\n\nIf the list is empty, the function returns None for the element and 0 for the count. This prevents errors that would arise from trying to find a common element in an empty list.\nUsing Counter to Count Elements:\n\nitem_counts = Counter(items): Creates a Counter object that counts each occurrence of each element in the list.\nThe most_common() method of the Counter object is used to retrieve the most common elements. most_common(1) returns a list of the single most common element and its count as a tuple.\nReturn the Most Common Element and Count:\n\nThe function returns a tuple where the first element is the most common item in the list, and the second element is the count of that item.\nExample Usage:\n\nThe example usage part creates a list of fruit names with some repetitions.\nThe function is called with this list, and it prints out the most common element and its count.\nThis example is handy for any application needing to identify predominant items in datasets, like finding the most commonly used words in text processing, most frequent responses in a survey, or even most visited pages in web analytics.\n</Explanation>\n\nExplain this code :" + selectedText,
+				"parameters": {
+					"decoding_method": "greedy",
+					"max_new_tokens": 1000,
+					"min_new_tokens": 0,
+					"stop_sequences": [],
+					"repetition_penalty": 1
+				},
+				"model_id": "mistralai/mixtral-8x7b-instruct-v01",
+				"project_id": "2bd2fef2-9902-41f4-b67a-b35ac6fca32d",
+				"moderations": {
+					"hap": {
+						"input": {
+							"enabled": true,
+							"threshold": 0.5,
+							"mask": {
+								"remove_entity_value": true
+							}
+						},
+						"output": {
+							"enabled": true,
+							"threshold": 0.5,
+							"mask": {
+								"remove_entity_value": true
+							}
+						}
+					}
+				}
+			};
+
+			try {
+				const response = await axios.post('https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29', postData, {
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Authorization': 'Bearer  ' + bearer_token
+					}
+				});
+				interface JsonResponse {
+					model_id: string;
+					created_at: string;
+					results: Array<{
+						generated_text: string;
+						generated_token_count?: number;
+					}>;
+				}
+				const parsedData: JsonResponse = JSON.parse(JSON.stringify(response.data));
+				const generatedText: string = parsedData.results[0].generated_text;
+				vscode.window.showInformationMessage(generatedText);
+				const outputChannel = vscode.window.createOutputChannel("Code Explainer");
+				outputChannel.show(true);
+				outputChannel.appendLine(generatedText);
+				console.log(generatedText);
+			} catch (error) {
+
+				// Something happened in setting up the request that triggered an Error
+				vscode.window.showErrorMessage(`Error Explaining the code` + error + 'try again token' + bearer_token);
+				bearer_token = await authenticate();
+
+			}
+
+
+
+			//vscode.window.showInformationMessage('Explaining the selected code...' + selectedText);
+		}
+
+
+	});
+
+	let fix = vscode.commands.registerCommand('extension.fix', () => {
+		vscode.window.showInformationMessage('Fixing the selected code...');
+	});
+
+	let refactor = vscode.commands.registerCommand('extension.refactor', () => {
+
+		vscode.window.showInformationMessage('refactor based on the selected code...' + modelType);
+	});
+
+	const viewProvider = new MyCustomViewProvider(context.extensionUri);
+
+	context.subscriptions.push(
+	  vscode.window.registerWebviewViewProvider(MyCustomViewProvider.viewType, viewProvider)
+	);
+	context.subscriptions.push(disposable);
+}
+
+// This method is called when your extension is deactivated
+export function deactivate() { }

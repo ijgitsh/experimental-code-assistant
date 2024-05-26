@@ -1,0 +1,47 @@
+import * as vscode from 'vscode';
+
+class MyCustomViewProvider implements vscode.WebviewViewProvider {
+    public static readonly viewType = 'myCustomView';
+
+    constructor(private readonly extensionUri: vscode.Uri) {}
+
+    resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
+        webviewView.webview.options = {
+            enableScripts: true,
+        };
+
+        webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+
+    }
+
+    private getHtmlForWebview(webview: vscode.Webview): string {
+        return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AI Code Assistant</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 10px; }
+                h1 { color: #007acc; }
+            </style>
+        </head>
+        <body>
+            <h1>AI Code Assistant</h1>
+            <p>The folder currently open doesn't have a Git repository. You can initialize a repository which will enable source control features powered by Git.</p>
+        </body>
+        </html>`;
+    }
+}
+
+export function activate(context: vscode.ExtensionContext) {
+    console.log('Extension "my-code-assistant" is now active!');
+
+    const viewProvider = new MyCustomViewProvider(context.extensionUri);
+
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(MyCustomViewProvider.viewType, viewProvider)
+    );
+}
+
+export function deactivate() {}
