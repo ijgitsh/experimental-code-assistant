@@ -1,7 +1,7 @@
 {
     "name": "my-code-assistant",
     "displayName": "My Code Assistant",
-    "publisher": "your-publisher",
+    "publisher": "Iman Johari",
     "description": "",
     "version": "0.0.1",
     "engines": {
@@ -14,8 +14,8 @@
     "activationEvents": [
       "onCommand:extension.create",
       "onCommand:extension.explain",
-      "onCommand:extension.fix",
-      "onCommand:extension.refactor",
+      "onCommand:extension.test",
+      "onCommand:extension.convert",
       "onCommand:myExtension.configure",
       "onView:myCustomView"
     ],
